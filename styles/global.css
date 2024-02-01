@@ -1,0 +1,12 @@
+:root {
+    --pop: "Poppins";
+    --spotifyGreen: #1DB954;
+    --spotifyBlack: #191414;
+    --white: #fff;
+}
+
+* {
+    font-family: var(--pop);
+
+    background-color: #191414;
+}
