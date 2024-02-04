@@ -1,5 +1,55 @@
+body {
+    height: 100vh;
+
+    background-color: var(--white);
+
+    text-align: center;
+}
+
+header#header {
+    background-color: var(--spotifyBlack);
+}
+
 #header .nav-link {
     color: var(--white);
 
     font-size: 18px;
+}
+
+nav.navbar {
+    padding: 10px 0;
+}
+
+main#main {
+    padding-top: 100px;
+}
+
+.intro-title {
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.intro-subtitle {
+    font-size: 20px;
+    font-weight: 500;
+
+    opacity: 80%;
+}
+
+.power-of-spotify {
+    padding-top: 70px;
+}
+
+.power-title {
+    font-size: 32px;
+    font-weight: 600;
+}
+
+.card {
+    border: none;
+}
+
+.card h2{
+    font-size: 16px;
+    font-weight: 600;
 }
