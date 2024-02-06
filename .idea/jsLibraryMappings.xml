@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="JavaScriptLibraryMappings">
-    <file url="PROJECT" libraries="{@fortawesome/fontawesome-free, bootstrap, font-awesome, jquery-3.2.1.slim, popper.js}" />
+    <file url="PROJECT" libraries="{bootstrap, jquery}" />
     <includedPredefinedLibrary name="Node.js Core" />
   </component>
 </project>
