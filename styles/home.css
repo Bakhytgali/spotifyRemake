@@ -1,13 +1,15 @@
 body {
     height: 100vh;
 
-    background-color: var(--white);
+    background-color: var(--spotifyBlack);
 
     text-align: center;
+
+    color: var(--white);
 }
 
 header#header {
-    background-color: var(--spotifyBlack);
+    background-color: var(--spotifyGreen);
 }
 
 #header .nav-link {
@@ -43,13 +45,18 @@ main#main {
 .power-title {
     font-size: 32px;
     font-weight: 600;
+
+    color: var(--spotifyGreen);
 }
 
 .card {
+    background-color: #191414;
     border: none;
 }
 
 .card h2{
     font-size: 16px;
     font-weight: 600;
+
+    color: var(--spotifyGreen);
 }

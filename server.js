@@ -40,4 +40,12 @@ const powerCards = [
     }
 ];
 
+const playlistRouter = require("./routes/playlist");
+
+app.use("/playlist", playlistRouter);
+
+const searchRouter = require("./routes/search");
+
+app.use("/search", searchRouter);
+
 app.listen(port);

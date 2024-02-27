@@ -21,13 +21,13 @@
                 <a class="navbar-brand" href="#">
                     <img src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/spotify-white-icon.png" alt="" width="50">
                 </a>
-                <a href="./" class="nav-link active">
+                <a href="./" class="nav-link">
                     Home
                 </a>
-                <a href="./index.ejs" class="nav-link">
+                <a href="./search" class="nav-link">
                     Search
                 </a>
-                <a href="./index.ejs" class="nav-link">
+                <a href="./index.ejs" class="nav-link active">
                     My Playlists
                 </a>
             </div>
@@ -50,14 +50,17 @@
                 </div>
 
                 <div id="playlists" class="mt-4">
-                    <h2 class="playlists-title">Made for You</h2>
-                    <div class="row d-flex flex-wrap">
+                    <h2 class="playlists-title">Your Playlists</h2>
+                    <div class="row d-flex flex-wrap pt-4">
                         <% playlists.forEach(playlist => { %>
                             <div class="col-md-3 mb-3">
                                 <div class="playlist-wrapper">
                                     <div class="playlist">
                                         <div class="playlist-header">
-                                            <img src="<%= playlist.images[0].url %>" alt="<%= playlist.name %>" class="img-fluid">
+                                            <!-- Modify the anchor tag to include the playlist ID as a query parameter -->
+                                            <a href="/playlist?playlistId=<%= playlist.id %>">
+                                                <img src="<%= playlist.images[0].url %>" alt="<%= playlist.name %>" class="img-fluid">
+                                            </a>
                                         </div>
                                         <div class="playlist-name pt-3 text-center">
                                             <%= playlist.name %>
@@ -68,6 +71,7 @@
                         <% }); %>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>

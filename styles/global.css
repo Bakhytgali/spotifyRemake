@@ -7,4 +7,6 @@
 
 * {
     font-family: var(--pop);
+    margin: 0;
+    padding: 0;
 }
