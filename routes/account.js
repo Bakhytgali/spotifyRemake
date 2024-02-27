@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 
 require("dotenv").config();
 
-mongoose.connect("mongodb://localhost:27017/project")
+mongoose.connect("mongodb+srv://metroSpider:hokageboss@atlascluster.mhywsqd.mongodb.net/project")
     .then(() => {
         console.log("MongoDB is connected!");
     });
