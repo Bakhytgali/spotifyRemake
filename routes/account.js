@@ -53,15 +53,14 @@ accountRouter.get("/", async (req, res) => {
 
             console.log(data.body["expires_in"]);
 
-            res.cookie("accessToken", accessToken, { httpOnly: true });
-            res.cookie("refreshToken", refreshToken, { httpOnly: true });
+            res.cookie("accessToken", accessToken, {httpOnly: true});
+            res.cookie("refreshToken", refreshToken, {httpOnly: true});
         } catch (error) {
             console.error(`Error! ${error.message}`);
             res.status(500).send("Internal Server Error");
             return;
         }
     }
-
     try {
         await getUserInfo();
 
