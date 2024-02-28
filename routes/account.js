@@ -1,26 +1,15 @@
 const express = require("express");
 const SpotifyWebApi = require("spotify-web-api-node");
 const cookieParser = require("cookie-parser");
-const { get } = require("axios");
 const mongoose = require("mongoose");
 
 require("dotenv").config();
 
-mongoose.connect("mongodb+srv://metroSpider:hokageboss@atlascluster.mhywsqd.mongodb.net/project")
-    .then(() => {
-        console.log("MongoDB is connected!");
-    });
-
-const songSchema = new mongoose.Schema({
-    id: String,
-    name: String,
-});
-
 const playlistSchema = new mongoose.Schema({
+    userId: String,
     id: String,
     name: String,
-    image: String,
-    songs: [songSchema]
+    image: String
 });
 const Playlist = mongoose.model("playlists", playlistSchema);
 
@@ -30,18 +19,17 @@ accountRouter.use(cookieParser());
 
 let code;
 let email, username, accessToken, refreshToken;
-let spotify;
+let spotify, userId;
 
 accountRouter.get("/", async (req, res) => {
     code = req.query.code;
-
     accessToken = req.cookies.accessToken;
     refreshToken = req.cookies.refreshToken;
 
     spotify = new SpotifyWebApi({
         redirectUri: `${process.env.REDIRECT_URI}`,
         clientId: `${process.env.CLIENT_ID}`,
-        clientSecret: `${process.env.CLIENT_SECRET}`
+        clientSecret: `${process.env.CLIENT_SECRET}`,
     });
 
     if (!accessToken || !refreshToken) {
@@ -53,18 +41,20 @@ accountRouter.get("/", async (req, res) => {
 
             console.log(data.body["expires_in"]);
 
-            res.cookie("accessToken", accessToken, {httpOnly: true});
-            res.cookie("refreshToken", refreshToken, {httpOnly: true});
+            res.cookie("accessToken", accessToken, { httpOnly: true });
+            res.cookie("refreshToken", refreshToken, { httpOnly: true });
         } catch (error) {
             console.error(`Error! ${error.message}`);
             res.status(500).send("Internal Server Error");
             return;
         }
+    } else {
+        accessToken = await refreshAccessToken(refreshToken);
+        res.cookie("accessToken", accessToken, {httpOnly:true});
     }
 
     try {
         await getUserInfo();
-
         const playlists = await getUserPlaylists();
 
         await savePlaylistsToDB(playlists);
@@ -82,6 +72,8 @@ async function getUserInfo() {
         const me = await spotify.getMe();
         email = me.body.email;
         username = me.body["display_name"];
+        userId = me.body.id;
+        console.log(userId);
     } catch (error) {
         console.error(`Error! ${error.message}`);
     }
@@ -89,14 +81,17 @@ async function getUserInfo() {
 
 async function getUserPlaylists() {
     try {
-        const response = await get(
-            "https://api.spotify.com/v1/me/playlists", {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                }
+        const response = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
             }
-        );
-        return response.data.items;
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to fetch playlists: ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data.items;
     } catch (error) {
         console.error(`Error: ${error.message}`);
         return [];
@@ -107,31 +102,60 @@ async function savePlaylistsToDB(playlists) {
     try {
         for (const playlist of playlists) {
             const doesExist = await Playlist.findOne({
+                userId: userId,
                 id: playlist.id
             });
             if (!doesExist) {
                 const newPlaylist = new Playlist({
-
+                    userId: userId,
                     id: playlist.id,
                     name: playlist.name,
-                    image: playlist.images.length > 0 ?
-                        playlist.images[0].url : null
-
+                    image: playlist.images.length > 0 ? playlist.images[0].url : null
                 });
+
                 console.log(`playlist id: ${playlist.id}`);
-
                 await newPlaylist.save();
-
             } else {
                 console.log(`Playlist with ID ${playlist.id} already exists in the database.`);
             }
         }
         console.log("Playlists have been stored in DB.");
-
     } catch (error) {
         console.error(`Error: ${error.message}`);
     }
 }
 
+const refreshAccessToken = async (refreshToken) => {
+    const url = "https://accounts.spotify.com/api/token";
+    const clientId = process.env.CLIENT_ID;
+    const clientSecret = process.env.CLIENT_SECRET;
 
+    const payload = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`
+        },
+        body: new URLSearchParams({
+            grant_type: 'refresh_token',
+            refresh_token: refreshToken,
+        }),
+    };
+
+    try {
+        const response = await fetch(url, payload);
+        const body = await response.json();
+
+        if (body.access_token) {
+            console.log("Access token refreshed successfully!");
+            return body.access_token;
+        } else {
+            console.error("Failed to refresh access token.");
+            return null;
+        }
+    } catch (error) {
+        console.error(`Error: ${error.message}`);
+        return null;
+    }
+};
 module.exports = accountRouter;
