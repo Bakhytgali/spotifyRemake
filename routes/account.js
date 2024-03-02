@@ -17,9 +17,10 @@ const accountRouter = express.Router();
 
 accountRouter.use(cookieParser());
 
-let code;
-let email, username, accessToken, refreshToken;
-let spotify, userId;
+let code; // authorization code
+let email, userName, userId; // created to display the user info
+let accessToken, refreshToken; // access token for the api calls, and refresh for refreshing it after some time
+let spotify; // spotify - instance of a Spotify Web API Node
 
 accountRouter.get("/", async (req, res) => {
     code = req.query.code;
@@ -43,36 +44,47 @@ accountRouter.get("/", async (req, res) => {
 
             res.cookie("accessToken", accessToken, { httpOnly: true });
             res.cookie("refreshToken", refreshToken, { httpOnly: true });
+
         } catch (error) {
+
             console.error(`Error! ${error.message}`);
             res.status(500).send("Internal Server Error");
             return;
+
         }
+
     } else {
+
         accessToken = await refreshAccessToken(refreshToken);
         res.cookie("accessToken", accessToken, {httpOnly:true});
+
     }
 
     try {
-        await getUserInfo();
+        await getUserInfo(res);
         const playlists = await getUserPlaylists();
 
         await savePlaylistsToDB(playlists);
 
-        res.render("account", { username, email, playlists });
+        res.render("account", { userName, email, playlists });
     } catch (error) {
         console.error(`Error! ${error.message}`);
         res.status(500).send("Internal Server Error");
     }
 });
 
-async function getUserInfo() {
+
+async function getUserInfo(res) {
     try {
         spotify.setAccessToken(accessToken);
         const me = await spotify.getMe();
         email = me.body.email;
-        username = me.body["display_name"];
+        userName = me.body["display_name"];
         userId = me.body.id;
+
+        res.cookie("userId", userId, {httpOnly : true});
+        res.cookie("userName", userName, {httpOnly : true});
+
         console.log(userId);
     } catch (error) {
         console.error(`Error! ${error.message}`);
@@ -88,7 +100,7 @@ async function getUserPlaylists() {
             }
         });
         if (!response.ok) {
-            throw new Error(`Failed to fetch playlists: ${response.statusText}`);
+            new Error(`Failed to fetch playlists: ${response.statusText}`);
         }
         const data = await response.json();
         return data.items;
@@ -158,4 +170,4 @@ const refreshAccessToken = async (refreshToken) => {
         return null;
     }
 };
-module.exports = accountRouter;
+module.exports = {accountRouter, Playlist};

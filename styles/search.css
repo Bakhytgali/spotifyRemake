@@ -15,7 +15,7 @@ body {
 }
 
 .search {
-    width: 400px;
+    width: 350px;
 
     background-color: inherit;
 
@@ -68,4 +68,27 @@ body {
     background-color: #1DB954;
     border: none;
     border-radius: 5px;
+}
+
+.user-playlists {
+    display: none;
+}
+
+.playlist-list {
+    list-style: none;
+}
+
+.user-playlist-item:hover {
+    color: #1DB954;
+}
+
+.user-playlist-item {
+    font-weight: 800;
+    font-size: 28px;
+
+    padding-top: 10px;
+
+    transition: 0.2s linear ease-in-out;
+
+    cursor: pointer;
 }

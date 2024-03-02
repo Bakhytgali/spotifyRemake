@@ -21,7 +21,7 @@ app.get("/", (req, res) => {
     res.render("index", { powerCards });
 });
 
-const accountRouter = require("./routes/account");
+const {accountRouter, Playlist} = require("./routes/account");
 
 app.use("/account", accountRouter);
 

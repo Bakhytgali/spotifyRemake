@@ -5,25 +5,25 @@ const cookieParser = require("cookie-parser");
 const searchRouter = express.Router();
 searchRouter.use(cookieParser());
 
-searchRouter.get("/", (req, res) => {
-    const accessToken = req.cookies.accessToken;
+const { accountRouter, Playlist } = require("./account");
 
-    // const playlists = loadUserPlaylist();
-    //
-    // console.log(playlists);
+searchRouter.get("/", async (req, res) => {
+    const accessToken = req.cookies.accessToken;
+    const userId = req.cookies.userId;
+    const userName = req.cookies.userName;
+
+    const playlists = await Playlist.find({
+        userId: userId
+    })
 
     res.cookie('accessToken', accessToken);
-    res.render("./search");
+    res.render("./search", {
+        playlists: playlists,
+        userName: userName,
+        userId: userId
+    });
 });
 
 
-// async function loadUserPlaylist() {
-//     try {
-//         return await Playlist.find()
-//     } catch (e) {
-//         console.log(`Error! ${e.message}`);
-//         return [];
-//     }
-// }
 
 module.exports = searchRouter;
