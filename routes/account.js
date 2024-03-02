@@ -17,12 +17,13 @@ const accountRouter = express.Router();
 
 accountRouter.use(cookieParser());
 
-let code; // authorization code
-let email, userName, userId; // created to display the user info
-let accessToken, refreshToken; // access token for the api calls, and refresh for refreshing it after some time
-let spotify; // spotify - instance of a Spotify Web API Node
 
 accountRouter.get("/", async (req, res, err) => {
+    let code; // authorization code
+    let email, userName, userId; // created to display the user info
+    let accessToken, refreshToken; // access token for the api calls, and refresh for refreshing it after some time
+    let spotify; // spotify - instance of a Spotify Web API Node
+
     code = req.query.code;
     accessToken = req.cookies.accessToken;
     refreshToken = req.cookies.refreshToken;
@@ -65,10 +66,10 @@ accountRouter.get("/", async (req, res, err) => {
     }
 
     try {
-        await getUserInfo(res);
-        const playlists = await getUserPlaylists();
+        await getUserInfo(res, spotify, accessToken, email, userName, userId);
+        const playlists = await getUserPlaylists(accessToken);
 
-        await savePlaylistsToDB(playlists);
+        await savePlaylistsToDB(playlists, userId);
 
         res.render("account", { userName, email, playlists });
     } catch (error) {
@@ -78,7 +79,7 @@ accountRouter.get("/", async (req, res, err) => {
 });
 
 
-async function getUserInfo(res) {
+async function getUserInfo(res, spotify, accessToken, email, userName, userId) {
     try {
         spotify.setAccessToken(accessToken);
         const me = await spotify.getMe();
@@ -97,7 +98,7 @@ async function getUserInfo(res) {
     }
 }
 
-async function getUserPlaylists() {
+async function getUserPlaylists(accessToken) {
     try {
         const response = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
             method: 'GET',
@@ -116,7 +117,7 @@ async function getUserPlaylists() {
     }
 }
 
-async function savePlaylistsToDB(playlists) {
+async function savePlaylistsToDB(playlists, userId) {
     try {
         for (const playlist of playlists) {
             const doesExist = await Playlist.findOne({
