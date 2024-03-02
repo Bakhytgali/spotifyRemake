@@ -2,7 +2,6 @@ const express = require("express");
 const SpotifyWebApi = require("spotify-web-api-node");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
-const axios = require('axios'); // Import axios for making HTTP requests
 
 require("dotenv").config();
 
@@ -18,12 +17,12 @@ const accountRouter = express.Router();
 
 accountRouter.use(cookieParser());
 
+let code; // authorization code
+let email, userName, userId; // created to display the user info
+let accessToken, refreshToken; // access token for the api calls, and refresh for refreshing it after some time
+let spotify; // spotify - instance of a Spotify Web API Node
 
-accountRouter.get("/", async (req, res) => {
-    let code; // authorization code
-    let accessToken, refreshToken; // access token for the api calls, and refresh for refreshing it after some time
-    let spotify; // spotify - instance of a Spotify Web API Node
-
+accountRouter.get("/", async (req, res, err) => {
     code = req.query.code;
     accessToken = req.cookies.accessToken;
     refreshToken = req.cookies.refreshToken;
@@ -34,25 +33,38 @@ accountRouter.get("/", async (req, res) => {
         clientSecret: `${process.env.CLIENT_SECRET}`,
     });
 
-    try {
-        if (!accessToken || !refreshToken) {
+    console.log(err)
+
+    if (!accessToken || !refreshToken) {
+        try {
             const data = await spotify.authorizationCodeGrant(code);
             accessToken = data.body["access_token"];
+
             refreshToken = data.body["refresh_token"];
 
             console.log(data.body["expires_in"]);
 
             res.cookie("accessToken", accessToken, { httpOnly: true });
             res.cookie("refreshToken", refreshToken, { httpOnly: true });
-        } else {
-            accessToken = await refreshAccessToken(refreshToken);
-            res.cookie("accessToken", accessToken, { httpOnly: true });
+
+        } catch (error) {
+
+            console.error(`Error! ${error.message}`);
+            res.status(500).send("Internal Server Error");
+            return;
+
         }
 
-        const { email, userName, userId } = await getUserInfo(res, spotify, accessToken);
-        const playlists = await getUserPlaylists(accessToken, userId);
+    } else {
+        accessToken = await refreshAccessToken(refreshToken);
+        res.cookie("accessToken", accessToken, {httpOnly:true});
+    }
 
-        await savePlaylistsToDB(playlists, userId);
+    try {
+        await getUserInfo(res);
+        const playlists = await getUserPlaylists();
+
+        await savePlaylistsToDB(playlists);
 
         res.render("account", { userName, email, playlists });
     } catch (error) {
@@ -62,41 +74,43 @@ accountRouter.get("/", async (req, res) => {
 });
 
 
-async function getUserInfo(res, spotify, accessToken) {
+async function getUserInfo(res) {
     try {
         spotify.setAccessToken(accessToken);
         const me = await spotify.getMe();
-        const email = me.body.email;
-        const userName = me.body.display_name;
-        const userId = me.body.id;
+        email = me.body.email;
+        userName = me.body["display_name"];
+        userId = me.body.id;
 
-        console.log(email + " " + userName + " " + userId);
+        res.cookie("userId", userId, {httpOnly : true});
+        res.cookie("userName", userName, {httpOnly : true});
 
-        res.cookie("userId", userId, { httpOnly: true });
-        res.cookie("userName", userName, { httpOnly: true });
-
-        return { email, userName, userId }; // Return user information
+        console.log(userId);
     } catch (error) {
         console.error(`Error! ${error.message}`);
-        throw error; // Throw error to be caught in the calling function
     }
 }
 
-async function getUserPlaylists(accessToken, userId) {
+async function getUserPlaylists() {
     try {
-        const response = await axios.get(`https://api.spotify.com/v1/users/${userId}/playlists`, {
+        const response = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
+            method: 'GET',
             headers: {
                 'Authorization': `Bearer ${accessToken}`
             }
         });
-        return response.data.items; // Return playlists
+        if (!response.ok) {
+            new Error(`Failed to fetch playlists: ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data.items;
     } catch (error) {
         console.error(`Error: ${error.message}`);
-        throw error; // Throw error to be caught in the calling function
+        return [];
     }
 }
 
-async function savePlaylistsToDB(playlists, userId) {
+async function savePlaylistsToDB(playlists) {
     try {
         for (const playlist of playlists) {
             const doesExist = await Playlist.findOne({
@@ -141,8 +155,8 @@ const refreshAccessToken = async (refreshToken) => {
     };
 
     try {
-        const response = await axios.post(url, payload);
-        const body = response.data;
+        const response = await fetch(url, payload);
+        const body = await response.json();
 
         if (body.access_token) {
             console.log("Access token refreshed successfully!");
@@ -156,5 +170,4 @@ const refreshAccessToken = async (refreshToken) => {
         return null;
     }
 };
-
-module.exports = { accountRouter, Playlist };
+module.exports = {accountRouter, Playlist};
