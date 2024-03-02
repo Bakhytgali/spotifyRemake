@@ -18,7 +18,7 @@ const accountRouter = express.Router();
 accountRouter.use(cookieParser());
 
 
-accountRouter.get("/", async (req, res, err) => {
+accountRouter.get("/", async (req, res) => {
     let code; // authorization code
     let email, userName, userId; // created to display the user info
     let accessToken, refreshToken; // access token for the api calls, and refresh for refreshing it after some time
@@ -67,7 +67,7 @@ accountRouter.get("/", async (req, res, err) => {
 
     try {
         await getUserInfo(res, spotify, accessToken, email, userName, userId);
-        const playlists = await getUserPlaylists(accessToken);
+        const playlists = await getUserPlaylists(accessToken, userId);
 
         await savePlaylistsToDB(playlists, userId);
 
@@ -98,7 +98,7 @@ async function getUserInfo(res, spotify, accessToken, email, userName, userId) {
     }
 }
 
-async function getUserPlaylists(accessToken) {
+async function getUserPlaylists(accessToken, userId) {
     try {
         const response = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
             method: 'GET',
