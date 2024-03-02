@@ -13,7 +13,7 @@ playlistRouter.get("/", async (req, res) => {
     try {
         accessToken = req.cookies.accessToken;
         res.cookie("accessToken", accessToken);
-        const playlist = await getPlaylist(playlistId, req);
+        const playlist = await getPlaylist(playlistId);
 
         if (!playlist) {
             res.status(404).send("Playlist not found");
