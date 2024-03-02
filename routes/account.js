@@ -33,7 +33,6 @@ accountRouter.get("/", async (req, res, err) => {
         clientSecret: `${process.env.CLIENT_SECRET}`,
     });
 
-    console.log(err)
 
     if (!accessToken || !refreshToken) {
         try {
@@ -86,6 +85,8 @@ async function getUserInfo(res) {
         email = me.body.email;
         userName = me.body["display_name"];
         userId = me.body.id;
+
+        console.log(email + " " + userName + " " + userId);
 
         res.cookie("userId", userId, {httpOnly : true});
         res.cookie("userName", userName, {httpOnly : true});
