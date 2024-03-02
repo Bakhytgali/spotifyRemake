@@ -1,6 +1,7 @@
 const express = require("express");
 const { join } = require("path");
 const mongoose = require("mongoose");
+const cors = require("cors");
 
 require("dotenv").config();
 
@@ -10,7 +11,7 @@ app.set("view engine", "ejs");
 
 app.use(express.static(__dirname));
 app.use("/styles", express.static(join(__dirname, "styles")));
-
+app.use(cors());
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
         console.log("MongoDB is connected!");
