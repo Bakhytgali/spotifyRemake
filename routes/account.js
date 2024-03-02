@@ -47,12 +47,17 @@ accountRouter.get("/", async (req, res, err) => {
             res.cookie("accessToken", accessToken, { httpOnly: true });
             res.cookie("refreshToken", refreshToken, { httpOnly: true });
 
+            email = null;
+            userName = null;
+            userId = null;
+
         } catch (error) {
 
             console.error(`Error! ${error.message}`);
             res.status(500).send("Internal Server Error");
-            return;
-
+            email = null;
+            userName = null;
+            userId = null;
         }
 
     } else {
