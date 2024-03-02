@@ -28,7 +28,7 @@ accountRouter.get("/", async (req, res, err) => {
     refreshToken = req.cookies.refreshToken;
 
     spotify = new SpotifyWebApi({
-        redirectUri: "http://localhost:5000/account",
+        redirectUri: "https://spotifyremake.onrender.com/account",
         clientId: `${process.env.CLIENT_ID}`,
         clientSecret: `${process.env.CLIENT_SECRET}`,
     });
