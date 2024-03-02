@@ -22,7 +22,7 @@ let email, userName, userId; // created to display the user info
 let accessToken, refreshToken; // access token for the api calls, and refresh for refreshing it after some time
 let spotify; // spotify - instance of a Spotify Web API Node
 
-accountRouter.get("/account", async (req, res) => {
+accountRouter.get("/", async (req, res) => {
     code = req.query.code;
     accessToken = req.cookies.accessToken;
     refreshToken = req.cookies.refreshToken;
