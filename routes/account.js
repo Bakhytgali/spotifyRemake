@@ -22,7 +22,7 @@ let email, userName, userId; // created to display the user info
 let accessToken, refreshToken; // access token for the api calls, and refresh for refreshing it after some time
 let spotify; // spotify - instance of a Spotify Web API Node
 
-accountRouter.get("/", async (req, res) => {
+accountRouter.get("/", async (req, res, err) => {
     code = req.query.code;
     accessToken = req.cookies.accessToken;
     refreshToken = req.cookies.refreshToken;
@@ -32,6 +32,8 @@ accountRouter.get("/", async (req, res) => {
         clientId: `${process.env.CLIENT_ID}`,
         clientSecret: `${process.env.CLIENT_SECRET}`,
     });
+
+    console.log(err)
 
     if (!accessToken || !refreshToken) {
         try {
@@ -54,10 +56,8 @@ accountRouter.get("/", async (req, res) => {
         }
 
     } else {
-
         accessToken = await refreshAccessToken(refreshToken);
         res.cookie("accessToken", accessToken, {httpOnly:true});
-
     }
 
     try {
